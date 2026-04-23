@@ -24,7 +24,7 @@ A single-file, browser-based physics design tool for a magnetic ball-bearing kin
 
 ## Running
 
-Open `ballbearing_Kinematic_simulation_v8.html` in any modern desktop browser. No server, no build step, no dependencies beyond two Google Fonts loaded from the CDN.
+Open `ballbearing_Kinematic_simulation_v9.html` in any modern desktop browser. No server, no build step, no dependencies beyond two Google Fonts loaded from the CDN.
 
 ## The mathematics
 
