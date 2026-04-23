@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radial Ball-Bearing Kinematic Sculpture Simulation v8</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1114;
+    --bg-panel: #16191d;
+    --bg-inset: #0a0c0f;
+    --bg-input: #1a1d22;
+    --ink: #e8e3d9;
+    --ink-dim: #8a847a;
+    --ink-faint: #494540;
+    --rule: #26292e;
+    --amber: #f2a623;
+    --amber-glow: #f5c56a;
+    --coral: #d85a30;
+    --copper: #b87333;
+    --green: #7cb342;
+    --red: #e24b4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh; padding: 24px 20px 48px;
+    background-image:
+      radial-gradient(ellipse at top, rgba(242, 166, 35, 0.04) 0%, transparent 50%),
+      linear-gradient(to bottom, var(--bg) 0%, #0b0d10 100%);
+  }
+  .container { max-width: 1440px; margin: 0 auto; }
+  header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 16px; margin-bottom: 20px;
+  }
+  .title-block h1 {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: 30px; letter-spacing: -0.01em; line-height: 1;
+  }
+  .title-block h1 em { font-style: italic; color: var(--amber); }
+  .title-block .subtitle {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-dim); margin-top: 8px;
+  }
+  .meta {
+    text-align: right; font-size: 10px; letter-spacing: 0.15em;
+    color: var(--ink-dim); line-height: 1.8;
+  }
+  .meta .val { color: var(--ink); }
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1280px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    position: relative;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber) 20%, var(--amber) 80%, transparent);
+    opacity: 0.15;
+  }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--rule);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .panel-header .tag { color: var(--amber); font-weight: 500; }
+  .panel-body { padding: 16px; }
+  .param-section {
+    border-bottom: 1px solid var(--rule);
+    padding: 12px 0;
+  }
+  .param-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .param-section:first-child { padding-top: 0; }
+  .section-title {
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 10px;
+  }
+  .param-row {
+    display: grid;
+    grid-template-columns: 1fr 88px 42px;
+    gap: 8px; align-items: center;
+    margin-bottom: 8px;
+  }
+  .param-row:last-child { margin-bottom: 0; }
+  .param-label {
+    font-size: 10px; color: var(--ink-dim);
+    letter-spacing: 0.05em;
+  }
+  .param-label .sub { color: var(--ink-faint); font-size: 9px; }
+  .param-input {
+    background: var(--bg-input);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 5px 8px;
+    font-family: inherit; font-size: 11px;
+    text-align: right;
+    -moz-appearance: textfield;
+    font-variant-numeric: tabular-nums;
+  }
+  .param-input::-webkit-outer-spin-button,
+  .param-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .param-input:focus { outline: none; border-color: var(--amber); }
+  .param-unit {
+    font-size: 9px; color: var(--ink-faint);
+    letter-spacing: 0.1em;
+  }
+  .param-select {
+    background: var(--bg-input);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 4px 6px;
+    font-family: inherit; font-size: 10px;
+    width: 100%;
+  }
+  .param-select:focus { outline: none; border-color: var(--amber); }
+  .unit-toggle {
+    display: flex; border: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .unit-toggle button {
+    flex: 1;
+    background: transparent; color: var(--ink-dim);
+    border: none; padding: 6px;
+    font-family: inherit; font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  .unit-toggle button.active { background: var(--amber); color: var(--bg); }
+  .unit-toggle button:first-child { border-right: 1px solid var(--rule); }
+  .sim-grid { display: grid; grid-template-rows: 1fr auto; gap: 16px; }
+  .sim-top {
+    aspect-ratio: 1 / 1;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule);
+    position: relative; overflow: hidden;
+    max-height: 560px;
+  }
+  svg { display: block; width: 100%; height: 100%; }
+  .readout-section {
+    border-bottom: 1px solid var(--rule);
+    padding: 12px 0;
+  }
+  .readout-section:first-child { padding-top: 0; }
+  .readout-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .readout-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .readout-row:last-child { margin-bottom: 0; }
+  .readout-key {
+    font-size: 10px; color: var(--ink-dim);
+    letter-spacing: 0.08em;
+  }
+  .readout-val {
+    font-size: 12px; color: var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+  .readout-val.big { font-size: 16px; }
+  .readout-val.good { color: var(--green); }
+  .readout-val.bad { color: var(--red); }
+  .readout-val.warn { color: var(--amber); }
+  .status-banner {
+    padding: 10px 14px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid;
+  }
+  .status-ok { background: rgba(124, 179, 66, 0.08); color: var(--green); border-color: rgba(124, 179, 66, 0.4); }
+  .status-warn { background: rgba(242, 166, 35, 0.08); color: var(--amber); border-color: rgba(242, 166, 35, 0.4); }
+  .status-bad { background: rgba(226, 75, 74, 0.08); color: var(--red); border-color: rgba(226, 75, 74, 0.4); }
+  .controls {
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    padding: 14px 20px;
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .ctrl-group {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .ctrl-label {
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  .ctrl-val {
+    font-size: 11px; color: var(--amber);
+    min-width: 56px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 140px; height: 2px;
+    background: var(--rule); outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--amber); border-radius: 50%;
+    cursor: pointer; box-shadow: 0 0 8px var(--amber-glow);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--amber);
+    border-radius: 50%; cursor: pointer; border: none;
+  }
+  button {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--rule);
+    padding: 7px 14px; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover { border-color: var(--amber); color: var(--amber); }
+  button.active { background: var(--amber); color: var(--bg); border-color: var(--amber); }
+  button.primary { background: var(--bg-input); border-color: var(--copper); color: var(--amber); }
+  button.primary:hover { background: var(--amber); color: var(--bg); }
+  .chk {
+    display: inline-flex; align-items: center; gap: 8px;
+    cursor: pointer; user-select: none;
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .chk input { display: none; }
+  .chk-box {
+    width: 12px; height: 12px;
+    border: 1px solid var(--ink-dim);
+    position: relative; flex-shrink: 0;
+  }
+  .chk input:checked + .chk-box { background: var(--amber); border-color: var(--amber); }
+  .chk input:checked + .chk-box::after {
+    content: ''; position: absolute;
+    left: 3px; top: 0; width: 4px; height: 8px;
+    border: solid var(--bg); border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  .chk:has(input:checked) { color: var(--amber); }
+  .plot-container { aspect-ratio: 3 / 2; background: var(--bg-inset); border: 1px solid var(--rule); }
+  .save-input {
+    width: 100%; margin-bottom: 6px;
+    background: var(--bg-input); border: 1px solid var(--rule);
+    color: var(--ink); padding: 6px 8px;
+    font-family: inherit; font-size: 10px;
+  }
+  .save-input:focus { outline: none; border-color: var(--amber); }
+  .saved-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 4px; border-bottom: 1px solid var(--rule);
+  }
+  .saved-item:last-child { border-bottom: none; }
+  .saved-item .nm {
+    font-size: 10px; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .saved-item .dt {
+    font-size: 8px; color: var(--ink-faint); letter-spacing: 0.1em;
+  }
+  .saved-item button {
+    padding: 3px 7px; font-size: 8px; letter-spacing: 0.1em;
+  }
+  .saved-empty {
+    font-size: 9px; color: var(--ink-faint);
+    padding: 6px 4px; font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title-block">
+      <h1>Radial ball-bearing <em>kinematic sculpture</em> simulation &nbsp;v8</h1>
+      <div class="subtitle">Full physics · K&amp;J curve fit · Breakaway detection · Battery analysis</div>
+    </div>
+    <div class="meta">
+      <div>MODEL / <span class="val">RBM-DESIGN</span></div>
+      <div>DWG / <span class="val">SIM-REV-G</span></div>
+      <div>STATUS / <span class="val" id="statusTag">INITIALIZING</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-header"><span>Design Parameters</span><span class="tag">INPUT</span></div>
+      <div class="panel-body">
+        <div class="unit-toggle">
+          <button id="unitMetric" class="active">Metric</button>
+          <button id="unitImperial">Imperial</button>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Plate &amp; geometry</div>
+          <div class="param-row"><span class="param-label">Plate diameter</span><input type="number" class="param-input" id="plateD" value="305" step="5"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Plate thickness<br><span class="sub">hardwood</span></span><input type="number" class="param-input" id="plateT" value="12" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Number of channels</span><input type="number" class="param-input" id="nChan" value="8" min="3" max="16" step="1"><span class="param-unit">—</span></div>
+          <div class="param-row"><span class="param-label">Channel inward slope</span><input type="number" class="param-input" id="slopeDeg" value="0" step="0.5"><span class="param-unit">°</span></div>
+          <div class="param-row"><span class="param-label">Plate tilt<br><span class="sub">from horizontal</span></span><input type="number" class="param-input" id="tiltDeg" value="0" step="1"><span class="param-unit">°</span></div>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Ball bearings</div>
+          <div class="param-row"><span class="param-label">Ball diameter</span><input type="number" class="param-input" id="ballD" value="10" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Ball material</span><select class="param-select" id="ballMat" style="grid-column: 2 / span 2;"><option value="chrome" selected>Chrome steel (G25)</option><option value="1018">Low-carbon steel</option><option value="tungsten">Tungsten carbide</option></select></div>
+          <div class="param-row"><span class="param-label">Ball mass<br><span class="sub">computed</span></span><input type="number" class="param-input" id="ballM" value="4.08" step="0.1" readonly style="color: var(--ink-dim);"><span class="param-unit" data-unit="mass">g</span></div>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Magnet (K&amp;J disc)</div>
+          <div class="param-row"><span class="param-label">Number of magnets<br><span class="sub">on rotating arm</span></span><input type="number" class="param-input" id="nMags" value="1" min="1" max="6" step="1"><span class="param-unit">—</span></div>
+          <div class="param-row"><span class="param-label">Magnet grade</span><select class="param-select" id="magGrade" style="grid-column: 2 / span 2;"><option value="42">N42</option><option value="48">N48</option><option value="52" selected>N52</option></select></div>
+          <div class="param-row"><span class="param-label">Magnet diameter</span><input type="number" class="param-input" id="magD" value="25" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Magnet thickness</span><input type="number" class="param-input" id="magT" value="6" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Orbit radius<br><span class="sub">center to magnet</span></span><input type="number" class="param-input" id="orbitR" value="120" step="5"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Clearance<br><span class="sub">magnet to plate bottom</span></span><input type="number" class="param-input" id="clearance" value="1.5" step="0.5"><span class="param-unit" data-unit="length">mm</span></div>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Drive &amp; power</div>
+          <div class="param-row"><span class="param-label">Motor RPM</span><input type="number" class="param-input" id="rpm" value="30" step="5"><span class="param-unit">rpm</span></div>
+          <div class="param-row"><span class="param-label">Motor efficiency</span><input type="number" class="param-input" id="motorEff" value="65" step="5" min="20" max="95"><span class="param-unit">%</span></div>
+          <div class="param-row"><span class="param-label">Battery capacity</span><input type="number" class="param-input" id="battWh" value="100" step="10"><span class="param-unit">Wh</span></div>
+          <div class="param-row"><span class="param-label">Duty cycle<br><span class="sub">% of day running</span></span><input type="number" class="param-input" id="duty" value="100" step="10" min="10" max="100"><span class="param-unit">%</span></div>
+          <div class="param-row"><span class="param-label">Battery life<br><span class="sub">computed runtime</span></span><input type="number" class="param-input" id="battLifeParam" value="—" readonly style="color: var(--ink-dim);"><span class="param-unit" id="battLifeUnit">hrs</span></div>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Presets</div>
+          <button id="preset1" style="width: 100%; margin-bottom: 6px;">Small desk (8in, thin)</button>
+          <button id="preset2" style="width: 100%; margin-bottom: 6px;">12in hardwood (yours)</button>
+          <button id="preset3" style="width: 100%;">Large tabletop (16in)</button>
+        </div>
+        <div class="param-section">
+          <div class="section-title">Saved designs</div>
+          <input id="saveName" class="save-input" placeholder="Design name…" maxlength="40">
+          <button id="saveBtn" style="width: 100%; margin-bottom: 10px;">+ Save current design</button>
+          <div id="savedList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sim-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <span>View 01 &nbsp;/&nbsp; Plan (top-down)</span>
+          <span class="tag"><label class="chk"><input type="checkbox" id="internalChk"><span class="chk-box"></span><span>Show internal mechanism</span></label></span>
+        </div>
+        <div class="panel-body" style="padding: 12px;">
+          <div class="sim-top"><svg id="topSvg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span>View 02 &nbsp;/&nbsp; Magnetic pull vs air gap</span><span class="tag">K&amp;J CURVE FIT</span></div>
+        <div class="panel-body" style="padding: 12px;">
+          <div class="plot-container"><svg id="plotSvg" viewBox="0 0 600 200" preserveAspectRatio="none"></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span>Engineering Output</span><span class="tag">ANALYSIS</span></div>
+      <div class="panel-body">
+        <div id="statusBanner" class="status-banner status-ok" style="margin-bottom: 14px;">
+          <span id="statusText">Design viable</span>
+          <span id="statusMargin">—</span>
+        </div>
+        <div class="readout-section">
+          <div class="section-title">Magnetic coupling</div>
+          <div class="readout-row"><span class="readout-key">Air gap (total)</span><span class="readout-val" id="out-gap">—</span></div>
+          <div class="readout-row"><span class="readout-key">Peak pull force</span><span class="readout-val" id="out-peakForce">—</span></div>
+          <div class="readout-row"><span class="readout-key">Req. force @ RPM</span><span class="readout-val" id="out-reqForce">—</span></div>
+          <div class="readout-row"><span class="readout-key">Safety margin</span><span class="readout-val big" id="out-margin">—</span></div>
+        </div>
+        <div class="readout-section">
+          <div class="section-title">Motion</div>
+          <div class="readout-row"><span class="readout-key">Ball travel distance</span><span class="readout-val" id="out-travel">—</span></div>
+          <div class="readout-row"><span class="readout-key">Peak ball speed</span><span class="readout-val" id="out-peakV">—</span></div>
+          <div class="readout-row"><span class="readout-key">Peak accel req.</span><span class="readout-val" id="out-peakA">—</span></div>
+          <div class="readout-row"><span class="readout-key">Max stable RPM</span><span class="readout-val" id="out-maxRpm">—</span></div>
+        </div>
+        <div class="readout-section">
+          <div class="section-title">Power &amp; battery</div>
+          <div class="readout-row"><span class="readout-key">Peak torque req.</span><span class="readout-val" id="out-torque">—</span></div>
+          <div class="readout-row"><span class="readout-key">Mechanical power</span><span class="readout-val" id="out-mechPower">—</span></div>
+          <div class="readout-row"><span class="readout-key">Electrical power</span><span class="readout-val" id="out-elecPower">—</span></div>
+          <div class="readout-row"><span class="readout-key">Battery life</span><span class="readout-val big" id="out-battLife">—</span></div>
+        </div>
+        <div class="readout-section">
+          <div class="section-title">Bill of materials</div>
+          <div id="bomList" style="font-size: 10px; color: var(--ink-dim); line-height: 1.7;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-group"><span class="ctrl-label">View speed</span><input type="range" id="viewSpeed" min="0" max="300" value="100"><span class="ctrl-val"><span id="viewSpeedVal">100</span>%</span></div>
+    <div class="ctrl-group"><span class="ctrl-label">Direction</span><button id="dirBtn" class="active">CW ↻</button></div>
+    <button id="playBtn" class="active">⏸ Pause</button>
+    <button id="resetBtn">↺ Reset</button>
+    <button id="restartBtn" title="Reset balls to outer ring without changing parameters">⊙ Restart (outer)</button>
+    <div style="flex: 1;"></div>
+    <button id="exportBtn" class="primary">↓ Export CSV</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// PHYSICS
+// ============================================================
+
+const MATERIALS = {
+  chrome:   { density: 7810, label: 'Chrome steel' },
+  '1018':   { density: 7870, label: 'Low-carbon steel' },
+  tungsten: { density: 14900, label: 'Tungsten carbide' },
+};
+
+// Magnet pull-force on a small ferromagnetic ball (K&J-style empirical fit).
+// All inputs in SI (m, T). Returns force in Newtons.
+function magnetPullForce(magD_m, magT_m, gap_m, ballD_m, Br) {
+  const mu0 = 4 * Math.PI * 1e-7;
+  const A = Math.PI * (magD_m / 2) ** 2;
+  // Zero-gap adhesion to a flat steel plate, scaled by disc-to-ball efficiency (~0.35)
+  const F0 = (Br * Br / (2 * mu0)) * A * 0.35;
+  // Effective gap: magnet face to ball center, roughly
+  const gap_eff = Math.max(gap_m, 1e-6) + ballD_m / 4;
+  // Decay exponent: 3 at close gaps, 4 at far gaps
+  const n = 3 + (gap_m / (gap_m + magT_m));
+  const decay = Math.pow(magT_m / (magT_m + gap_eff), n);
+  return F0 * decay;
+}
+
+function magnetForceVector(magPos, ballPos, magD, magT, gap, ballD, Br) {
+  const dx = magPos.x - ballPos.x;
+  const dy = magPos.y - ballPos.y;
+  const dz = -gap;
+  const d3 = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const eff = d3 - ballD / 2;
+  const F = magnetPullForce(magD, magT, Math.max(0.0001, eff), ballD, Br);
+  return { F, Fx: F * dx / d3, Fy: F * dy / d3 };
+}
+
+const BR_BY_GRADE = { '42': 1.32, '48': 1.40, '52': 1.48 };
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  plateD: 0.305, plateT: 0.012, nChan: 8, slopeDeg: 0, tiltDeg: 0,
+  ballD: 0.010, ballMat: 'chrome', ballM: 0,
+  nMags: 1, magGrade: '52', magD: 0.025, magT: 0.006,
+  orbitR: 0.120, clearance: 0.0015,
+  rpm: 30, motorEff: 0.65, battWh: 100, duty: 1.0,
+  units: 'metric', viewSpeedMul: 1.0, direction: 1, running: true, showInternal: false,
+  theta: 0, ballPos: [], ballVel: [],
+  logBuffer: [], logMaxRows: 5000,
+};
+
+const UNITS = {
+  metric: {
+    length: { to: m => m * 1000, from: mm => mm / 1000, label: 'mm', dec: 1 },
+    mass:   { to: kg => kg * 1000, from: g => g / 1000, label: 'g', dec: 2 },
+    force:  { to: N => N, from: N => N, label: 'N', dec: 2 },
+    speed:  { to: ms => ms, from: ms => ms, label: 'm/s', dec: 3 },
+    accel:  { to: a => a, from: a => a, label: 'm/s²', dec: 1 },
+    torque: { to: Nm => Nm * 1000, from: mNm => mNm / 1000, label: 'mN·m', dec: 1 },
+  },
+  imperial: {
+    length: { to: m => m * 39.3701, from: inches => inches / 39.3701, label: 'in', dec: 2 },
+    mass:   { to: kg => kg * 35.274, from: oz => oz / 35.274, label: 'oz', dec: 2 },
+    force:  { to: N => N * 0.22481, from: lbf => lbf / 0.22481, label: 'lbf', dec: 2 },
+    speed:  { to: ms => ms * 39.3701, from: ips => ips / 39.3701, label: 'in/s', dec: 2 },
+    accel:  { to: a => a * 39.3701, from: a => a / 39.3701, label: 'in/s²', dec: 0 },
+    torque: { to: Nm => Nm * 141.612, from: ozin => ozin / 141.612, label: 'oz·in', dec: 2 },
+  },
+};
+
+function fmt(cat, v) { const u = UNITS[state.units][cat]; return u.to(v).toFixed(u.dec) + ' ' + u.label; }
+
+// ============================================================
+// INPUT BINDING
+// ============================================================
+
+function updateBallMass() {
+  const r = state.ballD / 2;
+  const vol = (4/3) * Math.PI * r*r*r;
+  state.ballM = vol * MATERIALS[state.ballMat].density;
+  const u = UNITS[state.units].mass;
+  document.getElementById('ballM').value = u.to(state.ballM).toFixed(u.dec);
+}
+
+function readInputsToState() {
+  const u_len = UNITS[state.units].length;
+  state.plateD = u_len.from(parseFloat(document.getElementById('plateD').value));
+  state.plateT = u_len.from(parseFloat(document.getElementById('plateT').value));
+  state.nChan = parseInt(document.getElementById('nChan').value);
+  state.slopeDeg = parseFloat(document.getElementById('slopeDeg').value);
+  state.tiltDeg = parseFloat(document.getElementById('tiltDeg').value);
+  state.ballD = u_len.from(parseFloat(document.getElementById('ballD').value));
+  state.ballMat = document.getElementById('ballMat').value;
+  state.nMags = parseInt(document.getElementById('nMags').value);
+  state.magGrade = document.getElementById('magGrade').value;
+  state.magD = u_len.from(parseFloat(document.getElementById('magD').value));
+  state.magT = u_len.from(parseFloat(document.getElementById('magT').value));
+  state.orbitR = u_len.from(parseFloat(document.getElementById('orbitR').value));
+  state.clearance = u_len.from(parseFloat(document.getElementById('clearance').value));
+  state.rpm = parseFloat(document.getElementById('rpm').value);
+  state.motorEff = parseFloat(document.getElementById('motorEff').value) / 100;
+  state.battWh = parseFloat(document.getElementById('battWh').value);
+  state.duty = parseFloat(document.getElementById('duty').value) / 100;
+  updateBallMass();
+  if (state.ballPos.length !== state.nChan) initBallState();
+}
+
+function refreshInputDisplays() {
+  const u_len = UNITS[state.units].length;
+  document.getElementById('plateD').value = u_len.to(state.plateD).toFixed(u_len.dec);
+  document.getElementById('plateT').value = u_len.to(state.plateT).toFixed(u_len.dec);
+  document.getElementById('ballD').value = u_len.to(state.ballD).toFixed(u_len.dec);
+  document.getElementById('magD').value = u_len.to(state.magD).toFixed(u_len.dec);
+  document.getElementById('magT').value = u_len.to(state.magT).toFixed(u_len.dec);
+  document.getElementById('orbitR').value = u_len.to(state.orbitR).toFixed(u_len.dec);
+  document.getElementById('clearance').value = u_len.to(state.clearance).toFixed(u_len.dec);
+  updateBallMass();
+  document.querySelectorAll('[data-unit="length"]').forEach(el => el.textContent = u_len.label);
+  document.querySelectorAll('[data-unit="mass"]').forEach(el => el.textContent = UNITS[state.units].mass.label);
+}
+
+function initBallState() {
+  state.ballPos = new Array(state.nChan).fill(0);
+  state.ballVel = new Array(state.nChan).fill(0);
+}
+
+function initBallStateOuter() {
+  const R_max = state.plateD / 2 - state.ballD / 2;
+  state.ballPos = new Array(state.nChan).fill(R_max);
+  state.ballVel = new Array(state.nChan).fill(0);
+}
+
+// ============================================================
+// DYNAMICS STEP
+// ============================================================
+
+function stepPhysics(dt) {
+  const N = state.nChan, M = state.nMags;
+  const Br = BR_BY_GRADE[state.magGrade];
+  const gap = state.clearance + state.plateT;
+  const g = 9.81;
+  const slopeRad = state.slopeDeg * Math.PI / 180;
+  const tiltRad = state.tiltDeg * Math.PI / 180;
+  const R_max = state.plateD / 2 - state.ballD / 2;
+  const kSpring = 5000;
+  const damping = 0.0008;
+  const m_eff = (7/5) * state.ballM;
+
+  for (let i = 0; i < N; i++) {
+    const phi = (Math.PI * i) / N;
+    const p = state.ballPos[i];
+    const bx = p * Math.cos(phi);
+    const by = p * Math.sin(phi);
+
+    let Fx = 0, Fy = 0;
+    for (let k = 0; k < M; k++) {
+      const ang = state.theta + (k * 2 * Math.PI) / M;
+      const mx = state.orbitR * Math.cos(ang);
+      const my = state.orbitR * Math.sin(ang);
+      const fv = magnetForceVector({x:mx,y:my}, {x:bx,y:by}, state.magD, state.magT, gap, state.ballD, Br);
+      Fx += fv.Fx; Fy += fv.Fy;
+    }
+    let F_along = Fx * Math.cos(phi) + Fy * Math.sin(phi);
+    F_along += -state.ballM * g * Math.sin(slopeRad) * Math.sign(p || 1e-6);
+    F_along += state.ballM * g * Math.sin(tiltRad) * Math.cos(phi);
+
+    let F_const = 0;
+    if (p > R_max) F_const = -kSpring * (p - R_max);
+    else if (p < -R_max) F_const = -kSpring * (p + R_max);
+
+    const F_net = F_along + F_const - damping * state.ballVel[i];
+    const a = F_net / m_eff;
+    state.ballVel[i] += a * dt;
+    state.ballPos[i] += state.ballVel[i] * dt;
+
+    if (state.ballPos[i] > R_max) { state.ballPos[i] = R_max; if (state.ballVel[i] > 0) state.ballVel[i] = 0; }
+    if (state.ballPos[i] < -R_max) { state.ballPos[i] = -R_max; if (state.ballVel[i] < 0) state.ballVel[i] = 0; }
+  }
+}
+
+// ============================================================
+// ANALYSIS
+// ============================================================
+
+function computeAnalysis() {
+  const Br = BR_BY_GRADE[state.magGrade];
+  const gap = state.clearance + state.plateT;
+  const peakF = magnetPullForce(state.magD, state.magT, gap, state.ballD, Br) * state.nMags;
+  const omega = state.rpm * 2 * Math.PI / 60;
+  const m_eff = (7/5) * state.ballM;
+  const R = state.orbitR;
+  const a_peak = R * omega * omega;
+  const reqF = m_eff * a_peak;
+  const margin = peakF / Math.max(reqF, 1e-9);
+  const omega_max = Math.sqrt(peakF / (m_eff * R));
+  const maxRPM = omega_max * 60 / (2 * Math.PI);
+  const travel = 2 * (state.plateD / 2 - state.ballD / 2);
+  const v_peak = R * omega;
+  const torque_peak = reqF * state.orbitR * state.nMags;
+  const torque_avg = torque_peak * 0.5;
+  const mechPower = torque_avg * omega;
+  const elecPower = mechPower / state.motorEff;
+  const avgPower = elecPower * state.duty;
+  const battLifeHours = state.battWh / Math.max(avgPower, 0.001);
+  const battLifeDays = battLifeHours / 24;
+  return { gap, peakF, reqF, margin, maxRPM, travel, v_peak, a_peak, torque_peak, mechPower, elecPower, battLifeHours, battLifeDays };
+}
+
+// ============================================================
+// RENDER — TOP
+// ============================================================
+
+const NS = 'http://www.w3.org/2000/svg';
+const topSvg = document.getElementById('topSvg');
+const CX = 300, CY = 300;
+const PLATE_PX = 260;
+
+function el(tag, attrs = {}, parent = null) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function px(m) { return (m / (state.plateD / 2)) * PLATE_PX; }
+
+function buildTopStatic() {
+  topSvg.innerHTML = '';
+  const defs = el('defs', {}, topSvg);
+  const bg = el('radialGradient', { id: 'ballGrad', cx: '35%', cy: '30%', r: '70%' }, defs);
+  el('stop', { offset: '0%', 'stop-color': '#f5f1e8' }, bg);
+  el('stop', { offset: '40%', 'stop-color': '#b8b3a8' }, bg);
+  el('stop', { offset: '100%', 'stop-color': '#2a2824' }, bg);
+  const mg = el('radialGradient', { id: 'magGrad', cx: '50%', cy: '50%', r: '50%' }, defs);
+  el('stop', { offset: '0%', 'stop-color': '#f5c56a' }, mg);
+  el('stop', { offset: '70%', 'stop-color': '#d48e15' }, mg);
+  el('stop', { offset: '100%', 'stop-color': '#6a3f08' }, mg);
+  const pg = el('linearGradient', { id: 'plateGrad', x1: '0', y1: '0', x2: '1', y2: '1' }, defs);
+  el('stop', { offset: '0%', 'stop-color': '#1e2128' }, pg);
+  el('stop', { offset: '100%', 'stop-color': '#141619' }, pg);
+  const f = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '3', result: 'b' }, f);
+  const fm = el('feMerge', {}, f);
+  el('feMergeNode', { in: 'b' }, fm);
+  el('feMergeNode', { in: 'SourceGraphic' }, fm);
+
+  window.gRim = el('g', {}, topSvg);
+  window.gInternals = el('g', {}, topSvg);
+  window.gPlate = el('g', {}, topSvg);
+  window.gBalls = el('g', {}, topSvg);
+  window.gLabels = el('g', {}, topSvg);
+}
+
+function renderPlate() {
+  window.gRim.innerHTML = ''; window.gPlate.innerHTML = '';
+  window.gInternals.innerHTML = ''; window.gLabels.innerHTML = '';
+
+  el('circle', {
+    cx: CX, cy: CY, r: PLATE_PX + 15,
+    fill: '#0d0f12', stroke: '#2a2d33', 'stroke-width': '1'
+  }, window.gRim);
+
+  const op = state.showInternal ? 0.25 : 1;
+  el('circle', {
+    cx: CX, cy: CY, r: PLATE_PX,
+    fill: 'url(#plateGrad)', stroke: '#3a3d44', 'stroke-width': '0.5', opacity: op
+  }, window.gPlate);
+
+  const nSect = 2 * state.nChan;
+  for (let k = 0; k < nSect; k++) {
+    const a1 = (k * 2 * Math.PI) / nSect + 0.03;
+    const a2 = ((k+1) * 2 * Math.PI) / nSect - 0.03;
+    const x1 = CX + PLATE_PX * Math.cos(a1), y1 = CY + PLATE_PX * Math.sin(a1);
+    const x2 = CX + PLATE_PX * Math.cos(a2), y2 = CY + PLATE_PX * Math.sin(a2);
+    el('path', {
+      d: `M ${CX} ${CY} L ${x1} ${y1} A ${PLATE_PX} ${PLATE_PX} 0 0 1 ${x2} ${y2} Z`,
+      fill: k % 2 === 0 ? '#1d2026' : '#171a1f',
+      stroke: '#2e323a', 'stroke-width': '0.5', opacity: op
+    }, window.gPlate);
+  }
+
+  const outerStop = PLATE_PX - 6;
+  for (let i = 0; i < state.nChan; i++) {
+    const phi = (Math.PI * i) / state.nChan;
+    const x1 = CX - outerStop * Math.cos(phi), y1 = CY - outerStop * Math.sin(phi);
+    const x2 = CX + outerStop * Math.cos(phi), y2 = CY + outerStop * Math.sin(phi);
+    el('line', { x1,y1,x2,y2, stroke: '#050607', 'stroke-width': '20', 'stroke-linecap': 'round', opacity: op }, window.gPlate);
+  }
+  for (let i = 0; i < state.nChan; i++) {
+    const phi = (Math.PI * i) / state.nChan;
+    const x1 = CX - outerStop * Math.cos(phi), y1 = CY - outerStop * Math.sin(phi);
+    const x2 = CX + outerStop * Math.cos(phi), y2 = CY + outerStop * Math.sin(phi);
+    el('line', { x1,y1,x2,y2, stroke: '#13161b', 'stroke-width': '16', 'stroke-linecap': 'round', opacity: op }, window.gPlate);
+  }
+
+  // Internal mechanism (visible always at low opacity; prominent when showInternal is on)
+  const intOp = state.showInternal ? 1 : 0;
+  const orbitPx = px(state.orbitR);
+  el('circle', { cx: CX, cy: CY, r: orbitPx, fill: 'none', stroke: '#8a5020', 'stroke-width': '0.8',
+    'stroke-dasharray': '3 3', opacity: intOp * 0.7 }, window.gInternals);
+  el('circle', { cx: CX, cy: CY, r: PLATE_PX - 4, fill: 'none', stroke: '#3a2820', 'stroke-width': '1',
+    'stroke-dasharray': '6 4', opacity: intOp * 0.5 }, window.gInternals);
+  el('circle', { cx: CX, cy: CY, r: 22, fill: '#2a2420', stroke: '#5a4838', 'stroke-width': '0.8', opacity: intOp }, window.gInternals);
+  for (let s = 0; s < 4; s++) {
+    const a = s * Math.PI / 2 + Math.PI / 4;
+    el('circle', { cx: CX + 15 * Math.cos(a), cy: CY + 15 * Math.sin(a), r: 2, fill: '#5a5650', opacity: intOp }, window.gInternals);
+  }
+  window.gArm = el('g', {}, window.gInternals);
+  drawArm();
+
+  const nEnds = 2 * state.nChan;
+  for (let k = 0; k < nEnds; k++) {
+    const phi = (Math.PI * k) / state.nChan;
+    const lx = CX + (PLATE_PX + 20) * Math.cos(phi);
+    const ly = CY + (PLATE_PX + 20) * Math.sin(phi) + 3;
+    const t = el('text', { x: lx, y: ly, 'text-anchor': 'middle',
+      fill: '#5a5e66', 'font-family': 'JetBrains Mono', 'font-size': '9' }, window.gLabels);
+    t.textContent = String((k % state.nChan) + 1).padStart(2, '0');
+  }
+}
+
+function drawArm() {
+  if (!window.gArm) return;
+  window.gArm.innerHTML = '';
+  if (!state.showInternal) return;
+  const orbitPx = px(state.orbitR);
+  const magRpx = Math.max(8, px(state.magD) / 2);
+  for (let k = 0; k < state.nMags; k++) {
+    const ang = state.theta + (k * 2 * Math.PI) / state.nMags;
+    const mx = CX + orbitPx * Math.cos(ang);
+    const my = CY + orbitPx * Math.sin(ang);
+    el('line', { x1: CX, y1: CY, x2: mx, y2: my, stroke: '#5a2a10', 'stroke-width': '3.5',
+      opacity: '0.85', 'stroke-linecap': 'round' }, window.gArm);
+    el('circle', { cx: mx, cy: my, r: magRpx + 6, fill: '#f2a623', opacity: '0.35', filter: 'url(#glow)' }, window.gArm);
+    el('circle', { cx: mx, cy: my, r: magRpx, fill: 'url(#magGrad)', stroke: '#8a5020', 'stroke-width': '1' }, window.gArm);
+    el('circle', { cx: mx, cy: my, r: magRpx * 0.3, fill: '#fff3c4', opacity: '0.8' }, window.gArm);
+  }
+  el('circle', { cx: CX, cy: CY, r: 6, fill: '#5a2a10', stroke: '#8a5020', 'stroke-width': '0.5' }, window.gArm);
+}
+
+function renderBalls() {
+  window.gBalls.innerHTML = '';
+  const ballRpx = Math.max(6, px(state.ballD) / 2);
+  for (let i = 0; i < state.nChan; i++) {
+    const phi = (Math.PI * i) / state.nChan;
+    const p = state.ballPos[i];
+    const x = CX + px(p) * Math.cos(phi);
+    const y = CY + px(p) * Math.sin(phi);
+    el('circle', { cx: x, cy: y, r: ballRpx, fill: 'url(#ballGrad)', stroke: '#1a1814', 'stroke-width': '0.5' }, window.gBalls);
+    el('ellipse', { cx: x - ballRpx*0.3, cy: y - ballRpx*0.35,
+      rx: ballRpx*0.25, ry: ballRpx*0.18, fill: '#fff', opacity: '0.75' }, window.gBalls);
+  }
+}
+
+// ============================================================
+// FORCE PLOT
+// ============================================================
+
+function renderForcePlot() {
+  const svg = document.getElementById('plotSvg');
+  svg.innerHTML = '';
+  const W = 600, H = 200;
+  const pad = { l: 50, r: 30, t: 20, b: 30 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  const Br = BR_BY_GRADE[state.magGrade];
+  const gapMax = Math.max(state.magT * 4, state.clearance + state.plateT + 0.005);
+  const pts = [];
+  let maxF = 0;
+  for (let i = 0; i <= 80; i++) {
+    const g = (i / 80) * gapMax;
+    const F = magnetPullForce(state.magD, state.magT, g, state.ballD, Br);
+    pts.push({ g, F });
+    if (F > maxF) maxF = F;
+  }
+  el('line', { x1: pad.l, y1: pad.t, x2: pad.l, y2: H - pad.b, stroke: '#3a3d44', 'stroke-width': '0.8' }, svg);
+  el('line', { x1: pad.l, y1: H - pad.b, x2: W - pad.r, y2: H - pad.b, stroke: '#3a3d44', 'stroke-width': '0.8' }, svg);
+  const u_len = UNITS[state.units].length;
+  const u_force = UNITS[state.units].force;
+  const t1 = el('text', { x: pad.l + plotW / 2, y: H - 8, 'text-anchor': 'middle',
+    fill: '#8a847a', 'font-family': 'JetBrains Mono', 'font-size': '9' }, svg);
+  t1.textContent = `Air gap (${u_len.label})`;
+  const t2 = el('text', { x: 8, y: pad.t + plotH / 2, fill: '#8a847a',
+    'font-family': 'JetBrains Mono', 'font-size': '9',
+    transform: `rotate(-90 8 ${pad.t + plotH / 2})`, 'text-anchor': 'middle' }, svg);
+  t2.textContent = `Pull force (${u_force.label})`;
+  for (let i = 0; i <= 4; i++) {
+    const gx = (i / 4) * gapMax;
+    const x = pad.l + (i / 4) * plotW;
+    el('line', { x1: x, y1: H - pad.b, x2: x, y2: H - pad.b + 3, stroke: '#5a5e66', 'stroke-width': '0.5' }, svg);
+    const t = el('text', { x, y: H - pad.b + 14, 'text-anchor': 'middle',
+      fill: '#5a5e66', 'font-family': 'JetBrains Mono', 'font-size': '8' }, svg);
+    t.textContent = u_len.to(gx).toFixed(1);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const fy = (i / 4) * maxF;
+    const y = H - pad.b - (i / 4) * plotH;
+    el('line', { x1: pad.l - 3, y1: y, x2: pad.l, y2: y, stroke: '#5a5e66', 'stroke-width': '0.5' }, svg);
+    const t = el('text', { x: pad.l - 6, y: y + 3, 'text-anchor': 'end',
+      fill: '#5a5e66', 'font-family': 'JetBrains Mono', 'font-size': '8' }, svg);
+    t.textContent = u_force.to(fy).toFixed(2);
+  }
+  const pstr = pts.map(p => {
+    const x = pad.l + (p.g / gapMax) * plotW;
+    const y = H - pad.b - (p.F / maxF) * plotH;
+    return `${x},${y}`;
+  }).join(' ');
+  el('polyline', { points: pstr, fill: 'none', stroke: '#f2a623', 'stroke-width': '1.5' }, svg);
+  const opGap = state.clearance + state.plateT;
+  const opF = magnetPullForce(state.magD, state.magT, opGap, state.ballD, Br);
+  const opX = pad.l + (opGap / gapMax) * plotW;
+  const opY = H - pad.b - (opF / maxF) * plotH;
+  el('line', { x1: opX, y1: pad.t, x2: opX, y2: H - pad.b, stroke: '#e24b4a', 'stroke-width': '0.8', 'stroke-dasharray': '3 3' }, svg);
+  el('circle', { cx: opX, cy: opY, r: 5, fill: '#e24b4a', stroke: '#fff', 'stroke-width': '1' }, svg);
+  const lab = el('text', { x: opX + 8, y: opY - 6, fill: '#e24b4a',
+    'font-family': 'JetBrains Mono', 'font-size': '9' }, svg);
+  lab.textContent = `Op: ${u_force.to(opF).toFixed(2)} ${u_force.label}`;
+}
+
+// ============================================================
+// READOUTS
+// ============================================================
+
+function updateReadouts() {
+  const a = computeAnalysis();
+  document.getElementById('out-gap').textContent = fmt('length', a.gap);
+  document.getElementById('out-peakForce').textContent = fmt('force', a.peakF);
+  document.getElementById('out-reqForce').textContent = fmt('force', a.reqF);
+  const me = document.getElementById('out-margin');
+  me.textContent = a.margin.toFixed(2) + '×';
+  me.className = 'readout-val big ' + (a.margin >= 3 ? 'good' : a.margin >= 1.2 ? 'warn' : 'bad');
+
+  const banner = document.getElementById('statusBanner');
+  const text = document.getElementById('statusText');
+  const margE = document.getElementById('statusMargin');
+  const tag = document.getElementById('statusTag');
+  margE.textContent = a.margin.toFixed(1) + '× safety margin';
+  if (a.margin >= 3) { banner.className = 'status-banner status-ok'; text.textContent = '✓ Design viable'; tag.textContent = 'OK'; tag.style.color = 'var(--green)'; }
+  else if (a.margin >= 1.2) { banner.className = 'status-banner status-warn'; text.textContent = '⚠ Marginal — may fail under friction'; tag.textContent = 'MARGINAL'; tag.style.color = 'var(--amber)'; }
+  else { banner.className = 'status-banner status-bad'; text.textContent = '✗ Not viable — balls will lose sync'; tag.textContent = 'FAIL'; tag.style.color = 'var(--red)'; }
+
+  document.getElementById('out-travel').textContent = fmt('length', a.travel);
+  document.getElementById('out-peakV').textContent = fmt('speed', a.v_peak);
+  document.getElementById('out-peakA').textContent = fmt('accel', a.a_peak);
+  document.getElementById('out-maxRpm').textContent = a.maxRPM.toFixed(1) + ' rpm';
+  document.getElementById('out-torque').textContent = fmt('torque', a.torque_peak);
+  document.getElementById('out-mechPower').textContent = a.mechPower.toFixed(3) + ' W';
+  document.getElementById('out-elecPower').textContent = a.elecPower.toFixed(3) + ' W';
+
+  let lifeStr = a.battLifeDays > 1.5 ? a.battLifeDays.toFixed(1) + ' days' : a.battLifeHours.toFixed(1) + ' hrs';
+  const le = document.getElementById('out-battLife');
+  le.textContent = lifeStr;
+  le.className = 'readout-val big ' + (a.battLifeDays >= 30 ? 'good' : a.battLifeDays >= 7 ? 'warn' : 'bad');
+
+  const lifeParam = document.getElementById('battLifeParam');
+  const lifeUnit = document.getElementById('battLifeUnit');
+  if (a.battLifeDays > 1.5) {
+    lifeParam.value = a.battLifeDays.toFixed(1);
+    lifeUnit.textContent = 'days';
+  } else {
+    lifeParam.value = a.battLifeHours.toFixed(1);
+    lifeUnit.textContent = 'hrs';
+  }
+
+  const u_len = UNITS[state.units].length;
+  const bom = [
+    `• 1× Hardwood plate, Ø${u_len.to(state.plateD).toFixed(u_len.dec)} × ${u_len.to(state.plateT).toFixed(u_len.dec)} ${u_len.label}`,
+    `• ${state.nChan}× Chrome steel ball, Ø${u_len.to(state.ballD).toFixed(u_len.dec)} ${u_len.label} (G25)`,
+    `• ${state.nMags}× N${state.magGrade} disc magnet, Ø${u_len.to(state.magD).toFixed(u_len.dec)} × ${u_len.to(state.magT).toFixed(u_len.dec)} ${u_len.label}`,
+    `• 1× Low-RPM DC gearmotor, ~${state.rpm} rpm`,
+    `• 1× LiFePO4 battery, ${state.battWh} Wh`,
+    `• 1× PWM speed controller`,
+    `• Arm, enclosure, hardware`,
+  ];
+  document.getElementById('bomList').innerHTML = bom.join('<br>');
+}
+
+// ============================================================
+// LOOP
+// ============================================================
+
+let lastTs = null;
+function update(ts) {
+  if (lastTs == null) lastTs = ts;
+  const dt_real = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+  if (state.running) {
+    const dt = dt_real * state.viewSpeedMul;
+    const omega = state.rpm * 2 * Math.PI / 60 * state.direction;
+    state.theta += omega * dt;
+    state.theta = ((state.theta % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+    const sub = 6;
+    for (let s = 0; s < sub; s++) stepPhysics(dt / sub);
+    if (state.logBuffer.length < state.logMaxRows) {
+      const row = [ts.toFixed(1), state.theta.toFixed(4)];
+      for (let i = 0; i < state.nChan; i++) row.push(state.ballPos[i].toFixed(5));
+      state.logBuffer.push(row.join(','));
+    }
+  }
+  drawArm();
+  renderBalls();
+  requestAnimationFrame(update);
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+
+function bindInputs() {
+  const ids = ['plateD','plateT','nChan','slopeDeg','tiltDeg','ballD','ballMat','nMags','magGrade','magD','magT','orbitR','clearance','rpm','motorEff','battWh','duty'];
+  ids.forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      readInputsToState();
+      renderPlate();
+      renderForcePlot();
+      updateReadouts();
+    });
+  });
+  document.getElementById('unitMetric').addEventListener('click', () => {
+    state.units = 'metric';
+    document.getElementById('unitMetric').classList.add('active');
+    document.getElementById('unitImperial').classList.remove('active');
+    refreshInputDisplays(); renderForcePlot(); updateReadouts();
+  });
+  document.getElementById('unitImperial').addEventListener('click', () => {
+    state.units = 'imperial';
+    document.getElementById('unitImperial').classList.add('active');
+    document.getElementById('unitMetric').classList.remove('active');
+    refreshInputDisplays(); renderForcePlot(); updateReadouts();
+  });
+  document.getElementById('internalChk').addEventListener('change', e => {
+    state.showInternal = e.target.checked;
+    renderPlate();
+  });
+  const vs = document.getElementById('viewSpeed');
+  vs.addEventListener('input', () => {
+    state.viewSpeedMul = parseFloat(vs.value) / 100;
+    document.getElementById('viewSpeedVal').textContent = vs.value;
+  });
+  const dirBtn = document.getElementById('dirBtn');
+  dirBtn.addEventListener('click', () => {
+    state.direction *= -1;
+    dirBtn.textContent = state.direction === 1 ? 'CW ↻' : 'CCW ↺';
+  });
+  const playBtn = document.getElementById('playBtn');
+  playBtn.addEventListener('click', () => {
+    state.running = !state.running;
+    playBtn.textContent = state.running ? '⏸ Pause' : '▶ Play';
+    playBtn.classList.toggle('active', state.running);
+    lastTs = null;
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    state.theta = 0; initBallState(); state.logBuffer = [];
+  });
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    state.theta = 0; initBallStateOuter(); state.logBuffer = [];
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('saveBtn').addEventListener('click', saveCurrentDesign);
+  document.getElementById('saveName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveCurrentDesign(); }
+  });
+
+  document.getElementById('preset1').addEventListener('click', () => applyPreset({
+    plateD: 0.200, plateT: 0.006, nChan: 6, ballD: 0.008,
+    nMags: 1, magD: 0.020, magT: 0.005, orbitR: 0.075, clearance: 0.001, rpm: 40
+  }));
+  document.getElementById('preset2').addEventListener('click', () => applyPreset({
+    plateD: 0.305, plateT: 0.012, nChan: 8, ballD: 0.010,
+    nMags: 1, magD: 0.025, magT: 0.006, orbitR: 0.120, clearance: 0.0015, rpm: 30
+  }));
+  document.getElementById('preset3').addEventListener('click', () => applyPreset({
+    plateD: 0.406, plateT: 0.015, nChan: 10, ballD: 0.012,
+    nMags: 2, magD: 0.032, magT: 0.008, orbitR: 0.160, clearance: 0.002, rpm: 25
+  }));
+}
+
+function applyPreset(p) {
+  Object.assign(state, p);
+  refreshInputDisplays();
+  if (p.nChan !== undefined) document.getElementById('nChan').value = state.nChan;
+  if (p.slopeDeg !== undefined) document.getElementById('slopeDeg').value = state.slopeDeg;
+  if (p.tiltDeg !== undefined) document.getElementById('tiltDeg').value = state.tiltDeg;
+  if (p.ballMat !== undefined) document.getElementById('ballMat').value = state.ballMat;
+  if (p.nMags !== undefined) document.getElementById('nMags').value = state.nMags;
+  if (p.magGrade !== undefined) document.getElementById('magGrade').value = state.magGrade;
+  if (p.rpm !== undefined) document.getElementById('rpm').value = state.rpm;
+  if (p.motorEff !== undefined) document.getElementById('motorEff').value = Math.round(state.motorEff * 100);
+  if (p.battWh !== undefined) document.getElementById('battWh').value = state.battWh;
+  if (p.duty !== undefined) document.getElementById('duty').value = Math.round(state.duty * 100);
+  initBallState(); renderPlate(); renderForcePlot(); updateReadouts();
+}
+
+// ============================================================
+// SAVED DESIGNS (localStorage)
+// ============================================================
+
+const SAVED_KEY = 'rbm_saved_designs_v1';
+
+function loadSavedDesigns() {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function writeSavedDesigns(list) {
+  localStorage.setItem(SAVED_KEY, JSON.stringify(list));
+}
+
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function saveCurrentDesign() {
+  const nameInput = document.getElementById('saveName');
+  const name = (nameInput.value || '').trim();
+  if (!name) { nameInput.focus(); return; }
+  const params = {
+    plateD: state.plateD, plateT: state.plateT, nChan: state.nChan,
+    slopeDeg: state.slopeDeg, tiltDeg: state.tiltDeg,
+    ballD: state.ballD, ballMat: state.ballMat,
+    nMags: state.nMags, magGrade: state.magGrade,
+    magD: state.magD, magT: state.magT,
+    orbitR: state.orbitR, clearance: state.clearance,
+    rpm: state.rpm, motorEff: state.motorEff,
+    battWh: state.battWh, duty: state.duty,
+  };
+  const list = loadSavedDesigns();
+  list.unshift({ name, date: todayISO(), params });
+  writeSavedDesigns(list);
+  nameInput.value = '';
+  renderSavedList();
+}
+
+function renderSavedList() {
+  const list = loadSavedDesigns();
+  const container = document.getElementById('savedList');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = '<div class="saved-empty">No saved designs yet</div>';
+    return;
+  }
+  container.innerHTML = list.map((d, i) => `
+    <div class="saved-item">
+      <div style="flex:1; min-width:0;">
+        <div class="nm">${escapeHtml(d.name)}</div>
+        <div class="dt">${escapeHtml(d.date)}</div>
+      </div>
+      <button data-idx="${i}" class="load-btn">Load</button>
+      <button data-idx="${i}" class="del-btn" title="Delete">×</button>
+    </div>
+  `).join('');
+  container.querySelectorAll('button.load-btn').forEach(b => b.addEventListener('click', () => {
+    const idx = parseInt(b.dataset.idx);
+    const d = loadSavedDesigns()[idx];
+    if (d && d.params) applyPreset(d.params);
+  }));
+  container.querySelectorAll('button.del-btn').forEach(b => b.addEventListener('click', () => {
+    const idx = parseInt(b.dataset.idx);
+    const list = loadSavedDesigns();
+    list.splice(idx, 1);
+    writeSavedDesigns(list);
+    renderSavedList();
+  }));
+}
+
+function exportCSV() {
+  const header = 't_ms,theta_rad,' + Array.from({length: state.nChan}, (_,i) => `ball_${i+1}_pos_m`).join(',');
+  const csv = header + '\n' + state.logBuffer.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ball_sim_' + Date.now() + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+buildTopStatic();
+readInputsToState();
+initBallState();
+refreshInputDisplays();
+renderPlate();
+renderForcePlot();
+updateReadouts();
+bindInputs();
+renderSavedList();
+requestAnimationFrame(update);
+setInterval(() => { if (state.running) updateReadouts(); }, 250);
+</script>
+</body>
+</html>
