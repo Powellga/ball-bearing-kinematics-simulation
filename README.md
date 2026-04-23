@@ -198,3 +198,6 @@ The device sits at the intersection of several well-studied areas.
 ## Status
 
 Experimental design tool. The simulation is good enough to rank designs against each other and to find parameter windows where the balls lock into clean tracking (magnet thickness and effective channel damping turn out to dominate). It is not a replacement for a prototype.
+
+Thanks to my buddy Claude :)
+
