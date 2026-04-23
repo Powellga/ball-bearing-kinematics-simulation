@@ -103,6 +103,57 @@ $$
 
 This is a **driven, damped, parametrically-modulated harmonic oscillator**: the standard ODE of mechanical vibrations, with one twist. The stiffness $k_{eff}$ is itself time-varying because the magnet's distance to the ball oscillates as the magnet orbits. When the design is well inside its tracking regime, the parametric modulation is weak and can be ignored.
 
+### Solving the equation (phasor method)
+
+Freeze $k_{eff}(t) \approx \bar{k}$ at its minimum value. With constant stiffness the ODE is linear time-invariant, and the tracking solution falls out in seven steps.
+
+**Step 1. Rewrite the drive as the real part of a rotating phasor.**
+
+$$
+\cos(\omega t - \varphi_i) \;=\; \mathrm{Re}\bigl[e^{\,i(\omega t - \varphi_i)}\bigr].
+$$
+
+**Step 2. Guess a steady-state solution of the same form.**
+
+$$
+p_i(t) \;=\; \mathrm{Re}\bigl[P_i\,e^{\,i\omega t}\bigr],
+$$
+
+where $P_i$ is a complex amplitude carrying both magnitude and phase.
+
+**Step 3. Differentiate under the phasor.** $\dot{p}_i = \mathrm{Re}[i\omega P_i e^{i\omega t}]$, $\ddot{p}_i = \mathrm{Re}[-\omega^2 P_i e^{i\omega t}]$. Substituting into the ODE and dropping the common $e^{i\omega t}$ gives a purely complex algebraic equation:
+
+$$
+\bigl(-m_{eff}\,\omega^2 \;+\; i c\omega \;+\; \bar{k}\bigr)\,P_i \;=\; \bar{k}\,R\,e^{-i\varphi_i}.
+$$
+
+**Step 4. Solve for the complex amplitude.**
+
+$$
+P_i \;=\; \frac{\bar{k}\,R\,e^{-i\varphi_i}}{\bar{k} - m_{eff}\,\omega^2 + i c\omega}.
+$$
+
+**Step 5. Non-dimensionalize.** Divide numerator and denominator by $\bar{k}$ and introduce $\omega_n^2 = \bar{k}/m_{eff}$, $2\zeta\omega_n = c/m_{eff}$, and the frequency ratio $\beta = \omega/\omega_n$:
+
+$$
+P_i \;=\; \frac{R\,e^{-i\varphi_i}}{(1 - \beta^2) + i\,2\zeta\beta}.
+$$
+
+**Step 6. Write the denominator in polar form** $H(\beta)\,e^{i\delta}$:
+
+$$
+H(\beta) \;=\; \sqrt{(1-\beta^2)^2 + (2\zeta\beta)^2}, \qquad
+\tan\delta \;=\; \frac{2\zeta\beta}{1-\beta^2}.
+$$
+
+**Step 7. Back-substitute into $p_i(t)$.**
+
+$$
+p_i(t) \;=\; \mathrm{Re}\!\left[\frac{R}{H}\,e^{\,i(\omega t - \varphi_i - \delta)}\right] \;=\; \frac{R}{H}\cos(\omega t - \varphi_i - \delta).
+$$
+
+That is the boxed solution of the next subsection, with no guesswork. The same method applies to any forced linear ODE: the insight is that the steady-state response to a cosine is another cosine at the same frequency, and the complex exponential carries its amplitude and phase in one symbol.
+
 ### Tracking solution (steady state)
 
 Approximate $k_{eff}(t) \approx \bar{k}$, its minimum value, which occurs when the magnet is $\tfrac{\pi}{2}$ out of phase with the channel (the worst geometry for that ball). The equation becomes linear time-invariant, and the steady-state response to the cosine forcing is
@@ -158,6 +209,21 @@ F(d) \;\approx\; F_0 \left(\frac{t}{t + d}\right)^{n(d,t)}, \qquad n \approx 3\t
 $$
 
 so holding diameter fixed and going from 5 mm to 25 mm thick gains roughly $(5/30)^{-n} \times (25/45)^{n} \sim$ two orders of magnitude at $d = R$.
+
+### Design procedure
+
+Given a target orbit radius $R$, target motor angular frequency $\omega$, and ball properties $(D_{ball}, \rho)$, use the solution above as a design recipe:
+
+1. **Pick a tracking tolerance.** Choose $\epsilon$, the fractional amplitude error you can visually accept. For a crisp ring, $\epsilon \le 0.03$.
+2. **Solve for the maximum frequency ratio.** From $A/R \approx 1 - \beta^2$, $\beta_{max} = \sqrt{\epsilon}$. At $\epsilon = 0.03$, $\beta_{max} \approx 0.17$.
+3. **Required natural frequency.** $\omega_n > \omega / \beta_{max}$. At 30 RPM and $\epsilon = 0.03$, $\omega_n > 5.8\,\omega \approx 18.2$ rad/s.
+4. **Required stiffness.** $\bar{k} > m_{eff}\,\omega_n^2$ with $m_{eff} = \tfrac{7}{5}\cdot\tfrac{4}{3}\pi (D_{ball}/2)^3 \rho$.
+5. **Required pull force at orbit distance.** Because $\bar{k} \approx F(R)/R$, the magnet must provide $F(R) > \bar{k}\,R$. For a 10 mm chrome ball ($m_{eff} = 5.71\times 10^{-3}$ kg) at $R = 0.088$ m and 30 RPM, this gives $F(R) > 0.167$ N.
+6. **Size the magnet.** Invert the K&J fit $F(d) \approx F_0 (t/(t+d))^n$ for the minimum magnet $(D_{mag}, t_{mag})$ that hits the required $F(R)$. Thickness is the dominant lever. Start by fixing $D_{mag}$ at a commercial stock diameter and solving for $t_{mag}$.
+7. **Pick damping.** Choose $\zeta \in [0.2, 0.8]$ for clean cold-start transients, and convert back to the input units: $c = 2\zeta\sqrt{m_{eff}\,\bar{k}}$.
+8. **Verify in the sim.** Enter the parameters, click Restart (outer), and confirm that balls spiral into the tracking orbit within a few revolutions without slamming the walls.
+
+If step 6 produces a magnet larger than you can physically accommodate, tighten the ring ($R$ smaller) or slow the rotation ($\omega$ smaller). The required force scales as $R\,\omega^2$, so halving $R$ gives a 2x margin and halving $\omega$ gives a 4x margin.
 
 ### Transients, damping, and the walls
 
