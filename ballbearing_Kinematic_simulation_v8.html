@@ -309,6 +309,7 @@
           <div class="param-row"><span class="param-label">Number of channels</span><input type="number" class="param-input" id="nChan" value="8" min="3" max="16" step="1"><span class="param-unit">—</span></div>
           <div class="param-row"><span class="param-label">Channel inward slope</span><input type="number" class="param-input" id="slopeDeg" value="0.1" step="0.5"><span class="param-unit">°</span></div>
           <div class="param-row"><span class="param-label">Plate tilt<br><span class="sub">from horizontal</span></span><input type="number" class="param-input" id="tiltDeg" value="0" step="1"><span class="param-unit">°</span></div>
+          <div class="param-row"><span class="param-label">Channel damping<br><span class="sub">viscous drag on balls</span></span><input type="number" class="param-input" id="damping" value="0.006" step="0.001" min="0"><span class="param-unit">N·s/m</span></div>
         </div>
         <div class="param-section">
           <div class="section-title">Ball bearings</div>
@@ -460,6 +461,7 @@ const state = {
   nMags: 1, magGrade: '52', magD: 0.024, magT: 0.005,
   orbitR: 0.088, clearance: 0.003,
   rpm: 30, motorEff: 0.65, battWh: 100, duty: 1.0,
+  damping: 0.006,
   units: 'metric', viewSpeedMul: 1.0, direction: 1, running: true, showInternal: false,
   theta: 0, ballPos: [], ballVel: [],
   logBuffer: [], logMaxRows: 5000,
@@ -517,6 +519,7 @@ function readInputsToState() {
   state.motorEff = parseFloat(document.getElementById('motorEff').value) / 100;
   state.battWh = parseFloat(document.getElementById('battWh').value);
   state.duty = parseFloat(document.getElementById('duty').value) / 100;
+  state.damping = parseFloat(document.getElementById('damping').value);
   updateBallMass();
   if (state.ballPos.length !== state.nChan) initBallState();
 }
@@ -559,7 +562,7 @@ function stepPhysics(dt) {
   const tiltRad = state.tiltDeg * Math.PI / 180;
   const R_max = state.plateD / 2 - state.ballD / 2;
   const kSpring = 5000;
-  const damping = 0.0008;
+  const damping = state.damping;
   const m_eff = (7/5) * state.ballM;
 
   for (let i = 0; i < N; i++) {
@@ -923,7 +926,7 @@ function update(ts) {
 // ============================================================
 
 function bindInputs() {
-  const ids = ['plateD','plateT','nChan','slopeDeg','tiltDeg','ballD','ballMat','nMags','magGrade','magD','magT','orbitR','clearance','rpm','motorEff','battWh','duty'];
+  const ids = ['plateD','plateT','nChan','slopeDeg','tiltDeg','damping','ballD','ballMat','nMags','magGrade','magD','magT','orbitR','clearance','rpm','motorEff','battWh','duty'];
   ids.forEach(id => {
     document.getElementById(id).addEventListener('input', () => {
       readInputsToState();
@@ -1004,6 +1007,7 @@ function applyPreset(p) {
   if (p.motorEff !== undefined) document.getElementById('motorEff').value = Math.round(state.motorEff * 100);
   if (p.battWh !== undefined) document.getElementById('battWh').value = state.battWh;
   if (p.duty !== undefined) document.getElementById('duty').value = Math.round(state.duty * 100);
+  if (p.damping !== undefined) document.getElementById('damping').value = state.damping;
   initBallState(); renderPlate(); renderForcePlot(); updateReadouts();
 }
 
@@ -1044,6 +1048,7 @@ function saveCurrentDesign() {
     orbitR: state.orbitR, clearance: state.clearance,
     rpm: state.rpm, motorEff: state.motorEff,
     battWh: state.battWh, duty: state.duty,
+    damping: state.damping,
   };
   const list = loadSavedDesigns();
   list.unshift({ name, date: todayISO(), params });
