@@ -187,7 +187,7 @@ The device sits at the intersection of several well-studied areas.
 
 **Hypotrochoid / rolling-circle kinematics.** A point on a circle of radius $R/2$ whose center itself rotates on a circle of radius $R/2$ describes a degenerate Spirograph. More general epicycloid and hypotrochoid mechanisms (the Wankel rotor, planetary gear trains, classic spirograph toys) share the same two-rotation kinematic grammar.
 
-**Discrete Fourier sampling.** Writing the magnet as a complex phasor $M(t) = R e^{i\omega t}$, the along-channel ball position is $\operatorname{Re}\bigl(M(t)\,e^{-i\varphi_i}\bigr)$: the real projection onto a rotated axis. The eight balls are an 8-point spatial sampling of a rotating phasor, close kin to a DFT bank.
+**Discrete Fourier sampling.** Writing the magnet as a complex phasor $M(t) = R e^{i\omega t}$, the along-channel ball position is $\mathrm{Re}\bigl(M(t)\,e^{-i\varphi_i}\bigr)$: the real projection onto a rotated axis. The eight balls are an 8-point spatial sampling of a rotating phasor, close kin to a DFT bank.
 
 **Kuramoto oscillators and synchronization.** A family of $N$ oscillators synchronized by a common drive. The sculpture is the trivial uncoupled case, with phase imposed externally. The same math governs systems where the coupling is internal and self-organizing: metronomes on a shared platform, firefly flash synchronization, neural oscillators, power-grid generators.
 
