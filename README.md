@@ -1,6 +1,6 @@
 # Radial Ball-Bearing Kinematic Sculpture Simulation
 
-A single-file, browser-based physics design tool for a magnetic ball-bearing kinematic sculpture: a wooden plate with radial channels, a ball bearing in each channel, and a neodymium disc magnet orbiting beneath the plate. As the magnet rotates, it drags each ball to the perpendicular foot of its channel — the eight foot-points together trace a circle whose center itself orbits at half the magnet's radius (Thales' circle).
+A single-file, browser-based physics design tool for a magnetic ball-bearing kinematic sculpture: a wooden plate with radial channels, a ball bearing in each channel, and a neodymium disc magnet orbiting beneath the plate. As the magnet rotates, it drags each ball to the perpendicular foot of its channel — the eight foot-points together trace a circle whose center itself orbits at half the magnet's radius (Thales' circle).  See it in action here: https://powellga.github.io/ball-bearing-kinematics-simulation/
 
 ![Preview](screengrab.jpg)
 
