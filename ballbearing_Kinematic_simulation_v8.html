@@ -305,9 +305,9 @@
         <div class="param-section">
           <div class="section-title">Plate &amp; geometry</div>
           <div class="param-row"><span class="param-label">Plate diameter</span><input type="number" class="param-input" id="plateD" value="305" step="5"><span class="param-unit" data-unit="length">mm</span></div>
-          <div class="param-row"><span class="param-label">Plate thickness<br><span class="sub">hardwood</span></span><input type="number" class="param-input" id="plateT" value="12" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Plate thickness<br><span class="sub">hardwood</span></span><input type="number" class="param-input" id="plateT" value="19" step="1"><span class="param-unit" data-unit="length">mm</span></div>
           <div class="param-row"><span class="param-label">Number of channels</span><input type="number" class="param-input" id="nChan" value="8" min="3" max="16" step="1"><span class="param-unit">—</span></div>
-          <div class="param-row"><span class="param-label">Channel inward slope</span><input type="number" class="param-input" id="slopeDeg" value="0" step="0.5"><span class="param-unit">°</span></div>
+          <div class="param-row"><span class="param-label">Channel inward slope</span><input type="number" class="param-input" id="slopeDeg" value="0.1" step="0.5"><span class="param-unit">°</span></div>
           <div class="param-row"><span class="param-label">Plate tilt<br><span class="sub">from horizontal</span></span><input type="number" class="param-input" id="tiltDeg" value="0" step="1"><span class="param-unit">°</span></div>
         </div>
         <div class="param-section">
@@ -320,10 +320,10 @@
           <div class="section-title">Magnet (K&amp;J disc)</div>
           <div class="param-row"><span class="param-label">Number of magnets<br><span class="sub">on rotating arm</span></span><input type="number" class="param-input" id="nMags" value="1" min="1" max="6" step="1"><span class="param-unit">—</span></div>
           <div class="param-row"><span class="param-label">Magnet grade</span><select class="param-select" id="magGrade" style="grid-column: 2 / span 2;"><option value="42">N42</option><option value="48">N48</option><option value="52" selected>N52</option></select></div>
-          <div class="param-row"><span class="param-label">Magnet diameter</span><input type="number" class="param-input" id="magD" value="25" step="1"><span class="param-unit" data-unit="length">mm</span></div>
-          <div class="param-row"><span class="param-label">Magnet thickness</span><input type="number" class="param-input" id="magT" value="6" step="1"><span class="param-unit" data-unit="length">mm</span></div>
-          <div class="param-row"><span class="param-label">Orbit radius<br><span class="sub">center to magnet</span></span><input type="number" class="param-input" id="orbitR" value="120" step="5"><span class="param-unit" data-unit="length">mm</span></div>
-          <div class="param-row"><span class="param-label">Clearance<br><span class="sub">magnet to plate bottom</span></span><input type="number" class="param-input" id="clearance" value="1.5" step="0.5"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Magnet diameter</span><input type="number" class="param-input" id="magD" value="24" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Magnet thickness</span><input type="number" class="param-input" id="magT" value="5" step="1"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Orbit radius<br><span class="sub">center to magnet</span></span><input type="number" class="param-input" id="orbitR" value="88" step="5"><span class="param-unit" data-unit="length">mm</span></div>
+          <div class="param-row"><span class="param-label">Clearance<br><span class="sub">magnet to plate bottom</span></span><input type="number" class="param-input" id="clearance" value="3" step="0.5"><span class="param-unit" data-unit="length">mm</span></div>
         </div>
         <div class="param-section">
           <div class="section-title">Drive &amp; power</div>
@@ -455,10 +455,10 @@ const BR_BY_GRADE = { '42': 1.32, '48': 1.40, '52': 1.48 };
 // STATE
 // ============================================================
 const state = {
-  plateD: 0.305, plateT: 0.012, nChan: 8, slopeDeg: 0, tiltDeg: 0,
+  plateD: 0.305, plateT: 0.019, nChan: 8, slopeDeg: 0.1, tiltDeg: 0,
   ballD: 0.010, ballMat: 'chrome', ballM: 0,
-  nMags: 1, magGrade: '52', magD: 0.025, magT: 0.006,
-  orbitR: 0.120, clearance: 0.0015,
+  nMags: 1, magGrade: '52', magD: 0.024, magT: 0.005,
+  orbitR: 0.088, clearance: 0.003,
   rpm: 30, motorEff: 0.65, battWh: 100, duty: 1.0,
   units: 'metric', viewSpeedMul: 1.0, direction: 1, running: true, showInternal: false,
   theta: 0, ballPos: [], ballVel: [],
